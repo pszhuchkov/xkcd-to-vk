@@ -31,9 +31,9 @@ def get_wall_upload_server(group_id, url=VK_API_URL):
     response = requests.get(url.format('photos.getWallUploadServer'),
                             params=params)
     response.raise_for_status()
-    response_decoded = response.json()
-    check_errors_in_response(response_decoded)
-    upload_url = response_decoded['response']['upload_url']
+    decoded_response = response.json()
+    check_errors_in_response(decoded_response)
+    upload_url = decoded_response['response']['upload_url']
     return upload_url
 
 
@@ -42,11 +42,11 @@ def upload_and_save_image(url, file, group_id):
         files = {'photo': file}
         response = requests.post(url, files=files)
         response.raise_for_status()
-        response_decoded = response.json()
-        check_errors_in_response(response_decoded)
-    owner_id, media_id = save_image(response_decoded['server'],
-                                    response_decoded['photo'],
-                                    response_decoded['hash'],
+        decoded_response = response.json()
+        check_errors_in_response(decoded_response)
+    owner_id, media_id = save_image(decoded_response['server'],
+                                    decoded_response['photo'],
+                                    decoded_response['hash'],
                                     group_id)
     return owner_id, media_id
 
@@ -64,10 +64,10 @@ def save_image(server, photo, hash_code,
     response = requests.post(url.format('photos.saveWallPhoto'),
                              params=params)
     response.raise_for_status()
-    response_decoded = response.json()
-    check_errors_in_response(response_decoded)
-    owner_id = response_decoded['response'][0]['owner_id']
-    media_id = response_decoded['response'][0]['id']
+    decoded_response = response.json()
+    check_errors_in_response(decoded_response)
+    owner_id = decoded_response['response'][0]['owner_id']
+    media_id = decoded_response['response'][0]['id']
     return owner_id, media_id
 
 
@@ -83,8 +83,8 @@ def make_publication(owner_id, media_id, title, comments,
     }
     response = requests.get(url.format('wall.post'), params=params)
     response.raise_for_status()
-    response_decoded = response.json()
-    check_errors_in_response(response_decoded)
+    decoded_response = response.json()
+    check_errors_in_response(decoded_response)
 
 
 def get_last_comic_id(url=COMIC_API_URL):
@@ -99,13 +99,13 @@ def get_comic_properties(comic_id, url=COMIC_API_URL):
     url = url.format(comic_id)
     response = requests.get(url)
     response.raise_for_status()
-    response_decoded = response.json()
-    return response_decoded
+    decoded_response = response.json()
+    return decoded_response
 
 
-def check_errors_in_response(response_decoded):
-    if 'error' in response_decoded:
-        error_message = response_decoded['error']['error_msg']
+def check_errors_in_response(decoded_response):
+    if 'error' in decoded_response:
+        error_message = decoded_response['error']['error_msg']
         raise HTTPError(error_message)
 
 
