@@ -33,6 +33,7 @@ def get_wall_upload_server(group_id=VK_GROUP_ID, url=VK_API_URL):
                             params=params)
     response.raise_for_status()
     response_decoded = response.json()
+    check_errors_in_response(response_decoded)
     upload_url = response_decoded['response']['upload_url']
     return upload_url
 
@@ -43,6 +44,7 @@ def upload_and_save_image(url, file):
         response = requests.post(url, files=files)
         response.raise_for_status()
         response_decoded = response.json()
+        check_errors_in_response(response_decoded)
     owner_id, media_id = save_image(response_decoded['server'],
                                     response_decoded['photo'],
                                     response_decoded['hash'])
@@ -62,8 +64,11 @@ def save_image(server, photo, hash_code,
     response = requests.post(url.format('photos.saveWallPhoto'),
                              params=params)
     response.raise_for_status()
-    response_decoded = response.json()['response'][0]
-    return response_decoded['owner_id'], response_decoded['id']
+    response_decoded = response.json()
+    check_errors_in_response(response_decoded)
+    owner_id = response_decoded['response'][0]['owner_id']
+    media_id = response_decoded['response'][0]['id']
+    return owner_id, media_id
 
 
 def make_publication(owner_id, media_id, title, comments,
@@ -78,6 +83,8 @@ def make_publication(owner_id, media_id, title, comments,
     }
     response = requests.get(url.format('wall.post'), params=params)
     response.raise_for_status()
+    response_decoded = response.json()
+    check_errors_in_response(response_decoded)
 
 
 def get_last_comic_id(url=COMIC_API_URL):
@@ -94,6 +101,12 @@ def get_comic_properties(comic_id, url=COMIC_API_URL):
     response.raise_for_status()
     response_decoded = response.json()
     return response_decoded
+
+
+def check_errors_in_response(response_decoded):
+    if 'error' in response_decoded:
+        error_message = response_decoded['error']['error_msg']
+        raise HTTPError(error_message)
 
 
 def main():
