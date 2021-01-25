@@ -22,10 +22,10 @@ def download_image(url, filename):
         file.write(response.content)
 
 
-def get_wall_upload_server(group_id, url=VK_API_URL):
+def get_wall_upload_server(group_id, access_token, url=VK_API_URL):
     params = {
         'group_id': group_id,
-        'access_token': os.getenv('VK_ACCESS_TOKEN'),
+        'access_token': access_token,
         'v': VK_API_VERSION
     }
     response = requests.get(url.format('photos.getWallUploadServer'),
@@ -37,7 +37,7 @@ def get_wall_upload_server(group_id, url=VK_API_URL):
     return upload_url
 
 
-def upload_and_save_image(url, file, group_id):
+def upload_and_save_image(url, file, group_id, access_token):
     with open(file, 'rb') as file:
         files = {'photo': file}
         response = requests.post(url, files=files)
@@ -47,17 +47,18 @@ def upload_and_save_image(url, file, group_id):
     owner_id, media_id = save_image(decoded_response['server'],
                                     decoded_response['photo'],
                                     decoded_response['hash'],
-                                    group_id)
+                                    group_id,
+                                    access_token)
     return owner_id, media_id
 
 
-def save_image(server, photo, hash_code,
-               group_id, url=VK_API_URL):
+def save_image(server, photo, hash_code, group_id,
+               access_token, url=VK_API_URL):
     params = {
         'server': server,
         'photo': photo,
         'hash': hash_code,
-        'access_token': os.getenv('VK_ACCESS_TOKEN'),
+        'access_token': access_token,
         'v': VK_API_VERSION,
         'group_id': group_id
     }
@@ -72,13 +73,13 @@ def save_image(server, photo, hash_code,
 
 
 def make_publication(owner_id, media_id, title, comments,
-                     group_id, url=VK_API_URL):
+                     group_id, access_token, url=VK_API_URL):
     params = {
         'owner_id': f'-{group_id}',
         'from_group': 1,
         'attachments': f'photo{owner_id}_{media_id}',
         'message': f'{title}\n\n{comments}',
-        'access_token': os.getenv('VK_ACCESS_TOKEN'),
+        'access_token': access_token,
         'v': VK_API_VERSION
     }
     response = requests.get(url.format('wall.post'), params=params)
@@ -112,22 +113,25 @@ def check_errors_in_response(decoded_response):
 def main():
     load_dotenv()
     group_id = os.getenv('VK_GROUP_ID')
+    access_token = os.getenv('VK_ACCESS_TOKEN')
     comic_image_filename = 'random_comic.png'
     try:
         random_comic_id = randint(1, get_last_comic_id())
         comic_properties = get_comic_properties(random_comic_id)
         download_image(comic_properties['img'], comic_image_filename)
-        upload_url = get_wall_upload_server(group_id)
+        upload_url = get_wall_upload_server(group_id, access_token)
         owner_id, media_id = upload_and_save_image(
             upload_url,
             comic_image_filename,
-            group_id
+            group_id,
+            access_token
         )
         make_publication(
             owner_id, media_id,
             comic_properties['title'],
             comic_properties['alt'],
-            group_id
+            group_id,
+            access_token
         )
         print(f'''Comic "{comic_properties['title']}" is published''')
     except ConnectionError as conn_err:
