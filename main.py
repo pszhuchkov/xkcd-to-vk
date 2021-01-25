@@ -37,23 +37,22 @@ def get_wall_upload_server(group_id, access_token, url=VK_API_URL):
     return upload_url
 
 
-def upload_and_save_image(url, file, group_id, access_token):
+def upload_image_to_server(url, file):
     with open(file, 'rb') as file:
         files = {'photo': file}
         response = requests.post(url, files=files)
         response.raise_for_status()
         decoded_response = response.json()
         check_errors_in_response(decoded_response)
-    owner_id, media_id = save_image(decoded_response['server'],
-                                    decoded_response['photo'],
-                                    decoded_response['hash'],
-                                    group_id,
-                                    access_token)
-    return owner_id, media_id
+    return {
+        'server': decoded_response['server'],
+        'photo': decoded_response['photo'],
+        'hash': decoded_response['hash']
+    }
 
 
-def save_image(server, photo, hash_code, group_id,
-               access_token, url=VK_API_URL):
+def save_image_to_group_album(server, photo, hash_code, group_id,
+                              access_token, url=VK_API_URL):
     params = {
         'server': server,
         'photo': photo,
@@ -120,9 +119,12 @@ def main():
         comic_properties = get_comic_properties(random_comic_id)
         download_image(comic_properties['img'], comic_image_filename)
         upload_url = get_wall_upload_server(group_id, access_token)
-        owner_id, media_id = upload_and_save_image(
-            upload_url,
-            comic_image_filename,
+        uploading_properties = upload_image_to_server(upload_url,
+                                                      comic_image_filename)
+        owner_id, media_id = save_image_to_group_album(
+            uploading_properties['server'],
+            uploading_properties['photo'],
+            uploading_properties['hash'],
             group_id,
             access_token
         )
