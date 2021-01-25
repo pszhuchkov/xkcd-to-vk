@@ -131,7 +131,6 @@ def main():
             group_id,
             access_token
         )
-        print(f'''Comic "{comic_properties['title']}" is published''')
     except ConnectionError as conn_err:
         print(conn_err, file=sys.stderr)
         time.sleep(3)
