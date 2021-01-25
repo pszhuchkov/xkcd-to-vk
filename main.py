@@ -30,7 +30,6 @@ def get_wall_upload_server(group_id, access_token, url=VK_API_URL):
     }
     response = requests.get(url.format('photos.getWallUploadServer'),
                             params=params)
-    response.raise_for_status()
     decoded_response = response.json()
     check_errors_in_response(decoded_response)
     upload_url = decoded_response['response']['upload_url']
@@ -41,7 +40,6 @@ def upload_image_to_server(url, file):
     with open(file, 'rb') as file:
         files = {'photo': file}
         response = requests.post(url, files=files)
-        response.raise_for_status()
         decoded_response = response.json()
         check_errors_in_response(decoded_response)
     return {
@@ -63,7 +61,6 @@ def save_image_to_group_album(server, photo, hash_code, group_id,
     }
     response = requests.post(url.format('photos.saveWallPhoto'),
                              params=params)
-    response.raise_for_status()
     decoded_response = response.json()
     check_errors_in_response(decoded_response)
     owner_id = decoded_response['response'][0]['owner_id']
@@ -82,7 +79,6 @@ def make_publication(owner_id, media_id, title, comments,
         'v': VK_API_VERSION
     }
     response = requests.get(url.format('wall.post'), params=params)
-    response.raise_for_status()
     decoded_response = response.json()
     check_errors_in_response(decoded_response)
 
